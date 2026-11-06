@@ -1,0 +1,296 @@
+{
+  "name": "WF-02 - Receipt Text Extraction",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e3a4d7c8-5633-462c-b0d3-50a895046548",
+      "name": "Receive Receipt from WF-01"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first();\n\nconst binary = item.binary ?? {};\nconst binaryKeys = Object.keys(binary);\n\nif (binaryKeys.length === 0) {\n  throw new Error(\n    'No receipt file was received. Binary data is missing.'\n  );\n}\n\nconst receiptKey = binaryKeys[0];\nconst receiptFile = binary[receiptKey];\n\nreturn [\n  {\n    json: {\n      ...item.json,\n\n      receipt_binary_property: receiptKey,\n\n      receipt_file_name: receiptFile.fileName ?? null,\n\n      receipt_mime_type: receiptFile.mimeType ?? null,\n\n      extraction_status: 'ready_for_extraction'\n    },\n\n    binary: item.binary\n  }\n];;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "a423f4cb-70bc-437a-8123-302935a42423",
+      "name": "Inspect Receipt Input"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "01f51114-070b-499d-bb44-6e501a5d080b",
+              "leftValue": "={{ ['image/jpeg', 'image/png', 'application/pdf'].includes($json.receipt_mime_type) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "e44dedb8-035e-4c76-8e5b-6db0d10b0b6d",
+              "leftValue": "={{ $json.extraction_status === 'ready_for_extraction' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        0
+      ],
+      "id": "5eadcc0c-1e59-48c1-978d-5c8fb89395c2",
+      "name": "Validate Extraction Input"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ocr-service:8000/ocr",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "={{ $json.receipt_binary_property }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        768,
+        -240
+      ],
+      "id": "c75faf70-1616-472a-b427-848e2622baca",
+      "name": "Send Receipt to OCR Service"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2f4abdb6-3865-4d21-9f66-6c560ad46493",
+              "name": "extraction_status",
+              "value": "={{ $json.status }}",
+              "type": "string"
+            },
+            {
+              "id": "fe6a2d06-c4b2-4dc5-9be1-27ae30182a24",
+              "name": "extracted_text",
+              "value": "={{ $json.extracted_text }}",
+              "type": "string"
+            },
+            {
+              "id": "17783d7d-c9cb-4f78-9935-c6a6ffbc142c",
+              "name": "ocr_method",
+              "value": "={{ $json.extraction_method }}",
+              "type": "string"
+            },
+            {
+              "id": "bded7cac-9411-40cd-9936-e7f28211d10c",
+              "name": "source_filename",
+              "value": "={{ $json.filename }}",
+              "type": "string"
+            },
+            {
+              "id": "b997b24e-28bb-47c2-b593-716b278d7c1f",
+              "name": "source_mime_type",
+              "value": "={{ $json.mime_type }}",
+              "type": "string"
+            },
+            {
+              "id": "09a4666c-5801-40e6-8d64-a9db496e3205",
+              "name": "page_count",
+              "value": "={{ $json.page_count }}",
+              "type": "number"
+            },
+            {
+              "id": "7ef6476a-016f-463a-965f-0632bd40dae3",
+              "name": "original_filename",
+              "value": "={{ $('Preserve Receipt Metadata').item.json.original_filename }}",
+              "type": "string"
+            },
+            {
+              "id": "f0160d1e-c03c-4312-aee4-7bec8971f0ab",
+              "name": "original_mime_type",
+              "value": "={{ $('Preserve Receipt Metadata').item.json.original_mime_type }}",
+              "type": "string"
+            },
+            {
+              "id": "27bfd478-f747-4a0c-a256-ca3cd089db45",
+              "name": "original_size_bytes",
+              "value": "={{ $('Preserve Receipt Metadata').item.json.original_size_bytes }}",
+              "type": "number"
+            },
+            {
+              "id": "47802523-baed-4274-8875-5b28c7fa4088",
+              "name": "original_uploaded_at",
+              "value": "={{ $json.uploaded_at }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        944,
+        -240
+      ],
+      "id": "26d164c9-e119-4a6f-82d5-049c5611b653",
+      "name": "Prepare OCR Result"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bb6ca74d-c65c-4a5f-85ea-6d313c207e91",
+              "name": "original_filename",
+              "value": "={{ $json.receipt_filename }}",
+              "type": "string"
+            },
+            {
+              "id": "451a7996-0ba6-4353-a1de-2d4977d82c50",
+              "name": "original_mime_type",
+              "value": "={{ $json.receipt_mime_type }}",
+              "type": "string"
+            },
+            {
+              "id": "65877022-cd99-4916-ad08-f7ee5352c229",
+              "name": "original_size_bytes",
+              "value": "={{ $json.receipt_size_bytes }}",
+              "type": "number"
+            },
+            {
+              "id": "03dd40a9-0929-4a19-b265-3c3d46acf8b2",
+              "name": "original_uploaded_at",
+              "value": "={{ $json.uploaded_at }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        528,
+        -240
+      ],
+      "id": "8d8c442d-a1f9-4691-8912-79a689ca8615",
+      "name": "Preserve Receipt Metadata"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Receive Receipt from WF-01": {
+      "main": [
+        [
+          {
+            "node": "Inspect Receipt Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inspect Receipt Input": {
+      "main": [
+        [
+          {
+            "node": "Validate Extraction Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Extraction Input": {
+      "main": [
+        [
+          {
+            "node": "Preserve Receipt Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Receipt to OCR Service": {
+      "main": [
+        [
+          {
+            "node": "Prepare OCR Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preserve Receipt Metadata": {
+      "main": [
+        [
+          {
+            "node": "Send Receipt to OCR Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c417c046-962c-4d3f-9e79-a75ecdd37486",
+  "meta": {
+    "instanceId": "f738ceb660e82471669ff8ff2cb823dce88f61af0da433ca9af04025523fbd8d"
+  },
+  "id": "XlnVSLkL2GUfUSeK",
+  "tags": []
+}
