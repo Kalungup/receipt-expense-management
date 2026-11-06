@@ -86,24 +86,33 @@ The application aims to:
 
 ### Current n8n implementation
 
-- n8n: Workflow orchestration.
-- Docker: Local environment and deployment.
-- PostgreSQL: Expense data storage (planned).
-- AI vision/OCR service: Receipt extraction (planned).
-- Git and GitHub: Version control.
+- n8n: Workflow orchestration and automation.
+- Docker: Containerisation and local development environment.
+- Docker Compose: Management of application services.
+- Python: Backend OCR service implementation.
+- FastAPI: HTTP API for the OCR service.
+- Tesseract OCR: Text recognition from receipt images.
+- PyMuPDF: PDF processing and embedded text extraction.
+- Git and GitHub: Version control and project collaboration.
 
-### Other implementations
+### Planned Technologies
 
-- Python.
-- FastAPI.
-- LangChain.
-- Pydantic.
-- PostgreSQL.
-- Direct LLM API integration.
+- PostgreSQL: Structured expense data storage.
+- Pydantic: Structured data validation.
+- LangChain: Alternative AI application implementation.
+- LLM APIs: Intelligent receipt information extraction.
+- AI vision: Advanced processing of receipt images.
+
+### Alternative Implementations
+
+The application will also be implemented using:
+
+1. Python with LangChain.
+2. Pure Python with direct API integration and custom logic.
 
 ## 7. High-Level Architecture
 
-The intended processing pipeline is:
+###The intended processing pipeline is:
 
 Receipt Upload  
 → Document Validation  
@@ -116,18 +125,35 @@ Receipt Upload
 
 ## 8. n8n Workflow Design
 
-The initial workflow is:
+The n8n implementation uses modular workflows to separate
+receipt processing responsibilities.
 
-**WF-01: Receipt Ingestion**
+### Implemented Workflows
 
-1. Receive a receipt through an upload form.
-2. Validate the uploaded file.
-3. Prepare receipt metadata.
-4. Return an upload confirmation.
+#### WF-01: Receipt Ingestion
 
-Future workflows:
+Responsibilities:
 
-- WF-02: Receipt Text Extraction.
+1. Receive receipts through an upload form.
+2. Extract receipt metadata.
+3. Validate file type and file size.
+4. Separate accepted and rejected uploads.
+5. Send accepted receipts to WF-02.
+6. Wait for the receipt extraction workflow to finish.
+
+#### WF-02: Receipt Text Extraction
+
+Responsibilities:
+
+1. Receive receipt data and binary files from WF-01.
+2. Inspect and validate the input.
+3. Preserve original receipt metadata.
+4. Send the receipt to the local OCR service.
+5. Extract text from images and PDF documents.
+6. Return extracted text and processing metadata.
+
+### Planned Workflows
+
 - WF-03: Structured Information Extraction.
 - WF-04: Expense Categorisation.
 - WF-05: Expense Validation.
@@ -165,26 +191,35 @@ The three application implementations will follow equivalent milestones to enabl
 
 ## 11. Current Development Status
 
+## 11. Current Development Status
+
 | Component | Status |
 |---|---|
 | Project requirements | Defined |
-| Architecture | Initial design |
-| n8n environment | Pending setup |
-| Receipt ingestion | Pending |
-| OCR / vision | Not started |
-| Structured extraction | Not started |
-| Categorisation | Not started |
-| Database integration | Not started |
-| Reporting | Not started |
+| High-level architecture | Initial design completed |
+| Docker environment | Implemented |
+| n8n environment | Running |
+| Local OCR service | Implemented and tested |
+| WF-01: Receipt Ingestion | Implemented |
+| WF-02: Receipt Text Extraction | Implemented |
+| WF-01 / WF-02 integration | Implemented |
+| Structured information extraction | Pending |
+| Expense categorisation | Pending |
+| Expense validation | Pending |
+| PostgreSQL integration | Pending |
+| Duplicate detection | Pending |
+| Financial reporting | Pending |
 
-## 12. Future Improvements
+### Current Milestone
 
-- Expense dashboards.
-- Bank statement imports.
-- Receipt-to-bank transaction matching.
-- Conversational expense analysis.
-- Spending trends and budget monitoring.
-- Multi-user support.
+The initial receipt ingestion and OCR processing pipeline
+has been implemented.
+
+The application can receive receipt images and PDF documents,
+validate uploads, forward accepted documents to the OCR service
+and return extracted text with receipt metadata.
+
+The next milestone is structured information extraction.
 
 ---
 
