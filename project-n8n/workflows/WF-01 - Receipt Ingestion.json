@@ -1,0 +1,291 @@
+{
+  "name": "WF-01 - Receipt Ingestion",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Receipt Expense Manager",
+        "formDescription": "Upload a receipt to record your expense",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Upload Receipt",
+              "fieldType": "file",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "5d915a14-e251-4ea6-876b-c1aeade5f4e2",
+      "name": "On form submission",
+      "webhookId": "3c613728-9a12-4a60-bb67-84ffacda09d4"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f8fcdac2-8598-4bba-b3b9-bd2e966eba0e",
+              "name": "receipt_filename",
+              "value": "={{ $json[\"Upload Receipt\"][0].filename }}",
+              "type": "string"
+            },
+            {
+              "id": "93ee6270-f4a0-44a4-ad88-029adee616b7",
+              "name": "receipt_mime_type",
+              "value": "={{ $json[\"Upload Receipt\"][0].mimetype }}",
+              "type": "string"
+            },
+            {
+              "id": "a0c82b72-1b43-42da-bb84-741653182569",
+              "name": "receipt_size_bytes",
+              "value": "={{ Number($json[\"Upload Receipt\"][0].size) }}",
+              "type": "number"
+            },
+            {
+              "id": "bcedb9cd-be96-4955-a898-c8928bbc3964",
+              "name": "uploaded_at",
+              "value": "={{ $json.submittedAt }}",
+              "type": "string"
+            },
+            {
+              "id": "03228d0b-39a6-40b2-ac4a-56a7e5e5c51a",
+              "name": "upload_mode",
+              "value": "={{ $json.formMode }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "f0291bbd-1e6f-43c8-b831-7c232a265aa0",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7e353e8c-30cb-4379-9199-5b0dabd5b04f",
+              "leftValue": "={{\n  ['image/jpeg', 'image/png', 'application/pdf'].includes($json.receipt_mime_type)\n  && Number($json.receipt_size_bytes) <= 10485760\n}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "da793fd3-67ed-4c3b-a002-881bd64191bd",
+              "leftValue": "={{ $json.receipt_size_bytes }}",
+              "rightValue": 10485760,
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        0
+      ],
+      "id": "22e3a6a0-dc6c-4511-8388-bdf6ef8db47d",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "36e6622a-13dd-4fc4-ac20-c500cffcf5fe",
+              "name": "upload_status",
+              "value": "accepted",
+              "type": "string"
+            },
+            {
+              "id": "d351bfae-bd2f-4080-904a-94f4769d268f",
+              "name": "validation_message",
+              "value": "Receipt uploaded successfully and passed validation.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        -96
+      ],
+      "id": "74a90ea3-5616-4649-b0cc-d315ec36b0b6",
+      "name": "Receipt Accepted"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "36e6622a-13dd-4fc4-ac20-c500cffcf5fe",
+              "name": "upload_status",
+              "value": "rejected",
+              "type": "string"
+            },
+            {
+              "id": "d351bfae-bd2f-4080-904a-94f4769d268f",
+              "name": "validation_message",
+              "value": "Receipt rejected: unsupported file type or file exceeds 10 MB.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        608,
+        112
+      ],
+      "id": "e9735f2a-5d37-41de-883f-b4e825981c35",
+      "name": "Receipt Rejected"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "Receipt Accepted",
+        "completionMessage": "Your receipt was uploaded successfully and passed initial validation.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        816,
+        -96
+      ],
+      "id": "963aebe7-e246-41e1-9751-58c664fe8416",
+      "name": "Form",
+      "webhookId": "de491028-0ede-4706-b160-b8c245eb31c2"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "Upload Rejected",
+        "completionMessage": "Your file could not be accepted. Upload a JPEG, PNG or PDF file smaller than 10 MB.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        816,
+        112
+      ],
+      "id": "22c491c0-057d-4a5f-a300-dc0808cb59e0",
+      "name": "Form1",
+      "webhookId": "104623da-11a0-49a5-80ce-b4a533006b22"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Receipt Accepted",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Receipt Rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receipt Accepted": {
+      "main": [
+        [
+          {
+            "node": "Form",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receipt Rejected": {
+      "main": [
+        [
+          {
+            "node": "Form1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "415975f4-8dee-48bb-96ee-f01969b1e819",
+  "meta": {
+    "instanceId": "f738ceb660e82471669ff8ff2cb823dce88f61af0da433ca9af04025523fbd8d"
+  },
+  "id": "AEYWYXRMm9uz94rh",
+  "tags": []
+}
