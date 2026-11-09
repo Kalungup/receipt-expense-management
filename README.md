@@ -152,9 +152,33 @@ Responsibilities:
 5. Extract text from images and PDF documents.
 6. Return extracted text and processing metadata.
 
-### Planned Workflows
+#### WF-02: Receipt Text Extraction
 
-- WF-03: Structured Information Extraction.
+
+Responsibilities:
+
+1. Receive receipt data and binary files from WF-01.
+2. Inspect and validate the input.
+3. Preserve original receipt metadata.
+4. Send the receipt to the local OCR service.
+5. Extract text from images and PDF documents.
+6. Return extracted text and processing metadata.
+
+#### WF-03: Receipt Text Extraction
+
+
+Responsibilities:
+
+1. Receive OCR results from WF-02.
+2. Prepare OCR text and receipt metadata for AI processing.
+3. Send the text to the local Ollama inference service.
+4. Use Qwen3 to extract structured receipt information.
+5. Parse the AI-generated JSON response.
+6. Normalize financial amounts and quantities.
+7. Validate receipt fields and arithmetic consistency.
+8. Generate a duplicate detection key.
+
+### Planned Workflows
 - WF-04: Expense Categorisation.
 - WF-05: Expense Validation.
 - WF-06: Database Storage.
