@@ -20,5 +20,16 @@ services:
       - "8001:8000"
     restart: unless-stopped
 
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: receipt-ollama
+    restart: unless-stopped
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+
 volumes:
   n8n_data:
+  ollama_data:

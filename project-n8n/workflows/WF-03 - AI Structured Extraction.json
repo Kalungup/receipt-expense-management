@@ -1,0 +1,161 @@
+{
+  "name": "WF-03 - AI Structured Extraction",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -416,
+        -96
+      ],
+      "id": "452cf1d2-051d-44c1-a500-b9effa4ddcbd",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5f61303d-6d88-40e2-9ca8-03a32fa010cc",
+              "name": "ocr_text",
+              "value": "={{ $json.extracted_text }}",
+              "type": "string"
+            },
+            {
+              "id": "78b7508e-a28a-4df6-8c82-3c274122a42c",
+              "name": "filename",
+              "value": "={{ $json.source_filename }}",
+              "type": "string"
+            },
+            {
+              "id": "aeb63c01-e8fb-4f24-9a3e-69332937223b",
+              "name": "mime_type",
+              "value": "={{ $json.source_mime_type }}",
+              "type": "string"
+            },
+            {
+              "id": "d8d38661-bf40-4b8c-bfdf-8a1b6ecfec06",
+              "name": "ocr_method",
+              "value": "={{ $json.ocr_method }}",
+              "type": "string"
+            },
+            {
+              "id": "ff11fac4-d97f-4615-9a35-60d60b58d279",
+              "name": "page_count",
+              "value": "={{ $json.page_count }}",
+              "type": "string"
+            },
+            {
+              "id": "9e67bf0f-550b-449f-9a1f-c254796a9223",
+              "name": "original_size_bytes",
+              "value": "={{ $json.original_size_bytes }}",
+              "type": "number"
+            },
+            {
+              "id": "f8d6b86b-130d-464b-84e6-ee3f34f9204b",
+              "name": "extraction_status",
+              "value": "={{ $json.extraction_status }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -240,
+        -96
+      ],
+      "id": "84d71243-8544-41ab-a95d-a6eedc119b67",
+      "name": "Prepare_AI_Input"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert receipt data extraction system.\n\nExtract structured information from the OCR text below.\n\nRules:\n- Never invent information.\n- Use null for missing values.\n- Preserve the original currency.\n- Distinguish subtotal, VAT and final total.\n- Extract merchant, transaction date and receipt number.\n- Return accurate numerical values.\n\nOCR TEXT:\n{{ $json.ocr_text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -32,
+        -96
+      ],
+      "id": "b32121cc-9c0e-4646-b603-091756f33114",
+      "name": "AI_Receipt_Extraction"
+    },
+    {
+      "parameters": {
+        "model": "qwen3:8b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        112
+      ],
+      "id": "cec9b591-421e-44c0-afb4-c8c6b690c829",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "0ublCzLhZuxll3QD",
+          "name": "Ollama account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Prepare_AI_Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare_AI_Input": {
+      "main": [
+        [
+          {
+            "node": "AI_Receipt_Extraction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI_Receipt_Extraction",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "2c39f952-d286-4601-b8b7-09aebfc85b65",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f738ceb660e82471669ff8ff2cb823dce88f61af0da433ca9af04025523fbd8d"
+  },
+  "id": "xVSjKx1w98p3D2rp",
+  "tags": []
+}
